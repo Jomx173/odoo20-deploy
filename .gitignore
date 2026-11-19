@@ -1,0 +1,22 @@
+# Dump y archivos pesados/locales
+odoo.dump
+*.dump
+*.sql
+*.gz
+*.bak
+*.log
+
+# Entorno/credenciales locales
+.env
+.env.*
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
