@@ -20,7 +20,7 @@ Write-Host "(La URI se pasa de forma oculta al contenedor; no se mostrará aquí
 
 # Aiven requiere SSL; si la URI no lo incluye, se recomienda agregar ?sslmode=require
 # (si ya tiene parámetros, usar &sslmode=require).
-docker run --rm -v "${PWD}:/dump" postgres:17 pg_restore --no-owner --no-privileges -d "$AivenUri" /dump/odoo.dump
+docker run --rm -v "${PWD}:/dump" postgres:18 pg_restore --no-owner --no-privileges -d "$AivenUri" /dump/odoo.dump
 
 if ($LASTEXITCODE -ne 0) {
   throw "pg_restore terminó con código $LASTEXITCODE"

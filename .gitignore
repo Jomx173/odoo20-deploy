@@ -1,5 +1,7 @@
 # Dump y archivos pesados/locales
 odoo.dump
+restore.log
+_do_restore.ps1
 *.dump
 *.sql
 *.gz

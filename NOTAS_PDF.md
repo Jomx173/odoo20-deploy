@@ -116,3 +116,12 @@ Resultado:
 2. **Restaurar:** `.\restore.ps1 "<URI_AIVEN_con_sslmode=require>"` en `C:\Odoo20\deploy` (no ejecutado).
 3. **Render (Web Service, Docker, plan Free, 512 MB):** crear servicio desde el repo/`render.yaml`, configurar `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` (valores de Aiven). Render define `PORT`.
 4. **Verificación:** abrir URL en producción, validar módulo `ventas_unicah`, crear usuario administrador de Odoo para revisión y capturar evidencias (Aiven/Render/config BD/errores). Documentar credenciales de Odoo (no de Aiven/Render) en la entrega.
+## 8. Restauracion en Aiven y cierre del despliegue (2026-11-19)
+
+- Cliente usado para el restore: `postgres:18` (actualizado desde `postgres:17` en `restore.ps1`).
+- Antes del restore, `defaultdb` tenia 337 tablas en `public` y 0 modulos instalados (restore anterior incompleto).
+- Se detuvo un `pg_restore` antiguo colgado y se relanzo con:
+  `docker run --rm -v C:\Odoo20\deploy:/dump postgres:18 pg_restore --clean --if-exists --no-owner --no-privileges -d <URI> /dump/odoo.dump`
+- Salida redirigida a `restore.log` (ignorado por git). Credenciales nunca escritas en el repo.
+- Remote git: https://github.com/Jomx173/odoo20-deploy.git (rama `master`).
+- Build verificado: `docker build -t odoo-deploy C:\Odoo20\deploy` -> OK (imagen `odoo-deploy:latest`).
