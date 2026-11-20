@@ -19,6 +19,17 @@ if source.count(old) != 1:
 updated = source.replace(old, new, 1)
 compile(updated, str(path), 'exec')
 path.write_text(updated, encoding='utf-8')
+
+# Old browsers may have cached the permanent redirect at the original URL.
+path = path.with_name('assetsbundle.py')
+source = path.read_text(encoding='utf-8')
+old = '        return self.get_asset_url(unique=unique, extension=extension)\n\n    def get_version'
+new = "        return self.get_asset_url(unique=unique, extension=extension) + '?render_assets=1'\n\n    def get_version"
+if source.count(old) != 1:
+    raise SystemExit('Review the Odoo asset URL cache fix for this image')
+updated = source.replace(old, new, 1)
+compile(updated, str(path), 'exec')
+path.write_text(updated, encoding='utf-8')
 PY
 
 USER odoo
