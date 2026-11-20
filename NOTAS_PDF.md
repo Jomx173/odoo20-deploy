@@ -116,12 +116,31 @@ Resultado:
 2. **Restaurar:** `.\restore.ps1 "<URI_AIVEN_con_sslmode=require>"` en `C:\Odoo20\deploy` (no ejecutado).
 3. **Render (Web Service, Docker, plan Free, 512 MB):** crear servicio desde el repo/`render.yaml`, configurar `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` (valores de Aiven). Render define `PORT`.
 4. **Verificación:** abrir URL en producción, validar módulo `ventas_unicah`, crear usuario administrador de Odoo para revisión y capturar evidencias (Aiven/Render/config BD/errores). Documentar credenciales de Odoo (no de Aiven/Render) en la entrega.
-## 8. Restauracion en Aiven y cierre del despliegue (2026-11-19)
+## 8. Restauración en Aiven y cierre del despliegue (2026-11-19/20)
 
-- Cliente usado para el restore: `postgres:18` (actualizado desde `postgres:17` en `restore.ps1`).
-- Antes del restore, `defaultdb` tenia 337 tablas en `public` y 0 modulos instalados (restore anterior incompleto).
-- Se detuvo un `pg_restore` antiguo colgado y se relanzo con:
-  `docker run --rm -v C:\Odoo20\deploy:/dump postgres:18 pg_restore --clean --if-exists --no-owner --no-privileges -d <URI> /dump/odoo.dump`
-- Salida redirigida a `restore.log` (ignorado por git). Credenciales nunca escritas en el repo.
-- Remote git: https://github.com/Jomx173/odoo20-deploy.git (rama `master`).
-- Build verificado: `docker build -t odoo-deploy C:\Odoo20\deploy` -> OK (imagen `odoo-deploy:latest`).
+### Conexión y verificación previa
+- Servicio Aiven: host `pg-29137354-jesecerrato7-0a6a.j.aivencloud.com`, puerto `19973`, usuario `avnadmin`, base `defaultdb`, `sslmode=require` (contraseña: `PASSWORD`, nunca impresa ni escrita en archivos).
+- Comprobación: `SELECT version();` → `PostgreSQL 18.7 on x86_64-pc-linux-gnu ...` (conexión OK).
+- Estado observado antes del restore definitivo: `public` con 337 tablas y 0 filas en `ir_module_module` (restore previo incompleto/interrumpido). Se detectó un `pg_restore` antiguo sin progreso; se detuvieron contenedores cliente `postgres:18` y sesiones en `defaultdb`, y se limpió el esquema (`DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO avnadmin; GRANT ALL ON SCHEMA public TO public;`) — acción destructiva autorizada sobre `defaultdb` (base nueva con restore a medias).
+
+### Restore ejecutado
+- Dump: `C:\Odoo20\deploy\odoo.dump` (4,754,199 bytes, `pg_dump -Fc` de `odoo_dev`, 59 módulos instalados en origen). No versionado/no regenerado.
+- Cliente: imagen `postgres:18`.
+- Comando (contraseña enmascarada):  
+  `docker run --rm -v "C:\Odoo20\deploy:/dump" postgres:18 pg_restore --clean --if-exists --no-owner --no-privileges -d "postgres://avnadmin:PASSWORD@pg-29137354-jesecerrato7-0a6a.j.aivencloud.com:19973/defaultdb?sslmode=require" /dump/odoo.dump`
+- Salida redirigida a `C:\Odoo20\deploy\restore.log` (ignorado por git, sin credenciales). Log finaliza con `finished main parallel loop` y `EXITCODE:0`.
+- **Errores `pg_restore: error:`:** 0. **Críticos:** ninguno observado. **Inofensivos/esperados:** `skipping item ... ACL SCHEMA public` (privilegios gestionados por Aiven). No se observaron errores de rol/owner/extension en el restore definitivo.
+
+### Verificación en Aiven (post-restore)
+- `SELECT count(*) FROM information_schema.tables WHERE table_schema='public';` → **430** tablas.
+- `SELECT count(*) FROM ir_module_module WHERE state='installed';` → **60** módulos instalados.
+- `SELECT name,state,latest_version FROM ir_module_module WHERE name='ventas_unicah';` → `ventas_unicah | installed | 20.0.1.0` (**sí, instalado**).
+- Usuarios (`res_users`): `__system__` (inactivo), `admin` (activo), `public` (inactivo), `portaltemplate` (inactivo).
+
+### Build y pruebas
+- `docker build -t odoo-deploy C:\Odoo20\deploy` → **exitoso** (imagen `odoo-deploy:latest`, base `odoo:20.0-20261015`).
+- Prueba de arranque contra Aiven con `--stop-after-init`/`--db_sslmode=require`: ver reporte de ejecución asociado (si excedió 5 minutos se omitió y se documenta en el reporte final).
+
+### Control de versiones
+- Archivos sensibles no versionados: `odoo.dump`, `restore.log` (en `.gitignore`), sin contraseñas en el repo (`AVNS_`/credenciales no presentes).
+- Commit local y push: ver reporte final (remote autorizado `https://github.com/Jomx173/odoo20-deploy.git`, rama `master`).
