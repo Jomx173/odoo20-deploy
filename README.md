@@ -1,1 +1,9 @@
+# Odoo 20 en Render con PostgreSQL de Aiven
 
+1. Publica los cambios en la rama que usa el servicio existente en Render. Conserva el runtime **Docker**, el `Dockerfile` de la raíz y el plan **Free**. Deja vacío **Docker Command** para usar el arranque de la imagen.
+2. En **Environment**, verifica `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` y `DB_NAME=defaultdb`. Usa los valores del servicio PostgreSQL existente. Render asigna `PORT`. El inicio requiere SSL y lee la contraseña desde el entorno de libpq.
+3. Ejecuta **Manual Deploy → Deploy latest commit**. Comprueba que el despliegue esté activo. Abre `/web/login` en una ventana privada y revisa en **Network** que `/web/assets/` entregue CSS y JavaScript con HTTP 200 en una carga sin caché. La imagen conserva los bytes de los bundles ya guardados en PostgreSQL y evita el HTTP 301 hacia su propia URL. Un navegador que haya guardado el 301 anterior puede requerir recarga sin caché.
+4. En Odoo, entra con el administrador, activa el modo desarrollador y abre **Aplicaciones**. Quita el filtro predeterminado **Aplicaciones** y busca `ventas_unicah`. Si ya está instalado, abre el menú de su tarjeta y selecciona **Actualizar**. Si falta, actualiza la lista de aplicaciones y selecciona **Activar**. La actualización aplica los cambios de vistas a `defaultdb`.
+5. Crea una cotización de prueba con un cliente que tenga canal preferido. Verifica el canal, el total de unidades y los filtros. Para un total superior a 50 000 en la moneda del pedido, verifica el bloqueo, la aprobación con un administrador de Ventas, la identidad del aprobador y una copia sin aprobación.
+
+El arranque normal usa la base existente. `restore.ps1` corresponde a la restauración inicial y queda fuera de este redespliegue.

@@ -1,11 +1,27 @@
-FROM odoo:20.0
+# syntax=docker/dockerfile:1
+FROM odoo:20.0@sha256:c7352c766b245b3c0e5c7b7a57e7660dde3265872be9566870d44bdb974f44cf
 
 USER root
-COPY ./addons /mnt/extra-addons
-RUN chown -R odoo:odoo /mnt/extra-addons
+COPY --chown=odoo:odoo ./addons /mnt/extra-addons
+COPY --chmod=755 ./start-odoo.sh /usr/local/bin/start-odoo
+
+# Odoo redirects database-backed bundles to their own URL in this image.
+RUN python3 - <<'PY'
+from pathlib import Path
+
+path = Path('/usr/lib/python3/dist-packages/odoo/addons/base/models/ir_attachment.py')
+source = path.read_text(encoding='utf-8')
+redirect = "            return Stream(type='url', url=self.url, **kw)"
+old = '        elif self.url:\n' + redirect
+new = "        elif self.url and not (self.type == 'binary' and self.db_datas):\n" + redirect
+if source.count(old) != 1:
+    raise SystemExit('Review the Odoo attachment stream fix for this image')
+updated = source.replace(old, new, 1)
+compile(updated, str(path), 'exec')
+path.write_text(updated, encoding='utf-8')
+PY
 
 USER odoo
 
-# Arranque para Render (plan Free, 512 MB) usando variables de entorno.
-# PORT lo define Render; el resto se configuran como variables del servicio.
-CMD ["sh", "-c", "odoo --addons-path=/mnt/extra-addons,/usr/lib/python3/dist-packages/odoo/addons --db_host=$DB_HOST --db_port=$DB_PORT --db_user=$DB_USER --db_password=$DB_PASSWORD --db_sslmode=require -d $DB_NAME --db-filter=^${DB_NAME}$ --no-database-list --http-port=${PORT:-8069} --workers=0 --limit-memory-soft=400000000 --limit-memory-hard=480000000"]
+ENTRYPOINT ["/usr/local/bin/start-odoo"]
+CMD []

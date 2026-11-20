@@ -52,11 +52,17 @@
             <field name="user_id" position="after">
                 <field name="canal_venta"/>
             </field>
-            <filter name="my_sale_orders_filter" position="after">
+            <xpath expr="//search/group" position="before">
+                <separator/>
                 <filter name="requiere_aprobacion"
                         string="Requiere aprobación"
                         domain="[('requiere_aprobacion', '=', True)]"/>
-            </filter>
+                <separator/>
+                <filter name="canal_tienda" string="Tienda" domain="[('canal_venta', '=', 'tienda')]"/>
+                <filter name="canal_telefono" string="Teléfono" domain="[('canal_venta', '=', 'telefono')]"/>
+                <filter name="canal_web" string="Sitio web" domain="[('canal_venta', '=', 'web')]"/>
+                <filter name="canal_distribuidor" string="Distribuidor" domain="[('canal_venta', '=', 'distribuidor')]"/>
+            </xpath>
             <filter name="customer" position="after">
                 <filter name="agrupar_canal"
                         string="Canal de venta"

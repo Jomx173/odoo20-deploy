@@ -1,6 +1,6 @@
 {
     "name": "Ventas UNICAH",
-    "version": "1.0",
+    "version": "1.1",
     "summary": "Canal de venta y aprobación de pedidos grandes",
     "category": "Sales/Sales",
     "author": "UNICAH",

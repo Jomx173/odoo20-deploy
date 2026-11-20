@@ -14,5 +14,5 @@ services:
       - key: DB_PASSWORD
         sync: false
       - key: DB_NAME
-        sync: false
+        value: defaultdb
       # Render define PORT automaticamente; no es necesario declararlo aqui.
