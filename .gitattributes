@@ -1,1 +1,1 @@
-start-odoo.sh text eol=lf
+start-odoo.py text eol=lf

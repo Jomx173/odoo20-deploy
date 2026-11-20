@@ -3,7 +3,7 @@ FROM odoo:20.0@sha256:c7352c766b245b3c0e5c7b7a57e7660dde3265872be9566870d44bdb97
 
 USER root
 COPY --chown=odoo:odoo ./addons /mnt/extra-addons
-COPY --chmod=755 ./start-odoo.sh /usr/local/bin/start-odoo
+COPY --chmod=755 ./start-odoo.py /usr/local/bin/start-odoo
 
 # Odoo redirects database-backed bundles to their own URL in this image.
 RUN python3 - <<'PY'
